@@ -7,6 +7,7 @@ from Quartz.CoreGraphics import CGEventPost
 from Quartz.CoreGraphics import CGRectMake
 from Quartz.CoreGraphics import CGDisplayBounds
 from Quartz.CoreGraphics import CGGetActiveDisplayList
+from Quartz.CoreGraphics import kCGEventMouseMoved
 from Quartz.CoreGraphics import kCGEventLeftMouseDragged
 from Quartz.CoreGraphics import kCGEventRightMouseDragged
 from Quartz.CoreGraphics import kCGEventLeftMouseDown
@@ -66,39 +67,41 @@ def mouseEvent(type, posx, posy, pressure,whichbutton,status):
 
         #CGEventSetLocation(theEvent,(posx,posy))
 
-        if(status==1):
-            buttonstatuses=0x1
-        else:
-            buttonstatuses=0x0
-
-        CGEventSetIntegerValueField(theEvent,kCGTabletEventPointButtons,buttonstatuses)
-
         CGEventPost(kCGHIDEventTap, theEvent)
 
 
-def mousemove(posx,posy,pressure,whichbutton,status):
-    if(whichbutton==0):
-        mouseEvent(kCGEventLeftMouseDragged, posx,posy,pressure, buttonnum,status);
-    elif(whichbutton==1):
-        mouseEvent(kCGEventRightMouseDragged, posx,posy,pressure, buttonnum,status);
+def mousemove(posx,posy,pressure):
+    
+
+    if(pendown):
+        mouseEvent(kCGEventLeftMouseDrag, posx,posy,pressure, 0,1);
+    elif(eraserdown):
+        mouseEvent(kCGEventRightMouseDrag, posx,posy,pressure, 1,1);
+    else:
+        mouseEvent(kCGEventMouseMoved, posx,posy,pressure, None,None);
+
 def mouseclick(posx,posy, pressure,whichbutton,status):
         if(status==1):
                 if(buttonnum==0):
                         mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,whichbutton,status)
                         print "pen down"
+                        pendown=True
                         
                 elif(buttonnum==1):
                         mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,whichbutton,status)
                         print "eraser down"
+                        eraserdown=True
                         
         elif(status==0):
                 if(buttonnum==0):
                         mouseEvent(kCGEventLeftMouseUp, posx,posy,pressure,whichbutton,status)
                         print "pen up"
+                        pendown=False
                         
                 elif(buttonnum==1):
                         mouseEvent(kCGEventRightMouseUp, posx,posy,pressure,whichbutton,status)
                         print "eraser up"
+                        eraserdown=False
 
 
 rect = UpdateDisplaysBounds()
@@ -110,6 +113,8 @@ y= None
 pressure= None
 buttonnum= None
 buttonstatus = None
+pendown=False
+eraserdown=False
 #print rect
 
 port = 40118        # port where we expect to get a msg
@@ -137,7 +142,7 @@ while True:
     # print  gfxTablet, version, messagetype, x, y, pressure
      if(messagetype==0):
       #  print "move"
-        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0,buttonnum,buttonstatus);
+        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0);
         print x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0
      elif(messagetype==1):
     #    print "button"
