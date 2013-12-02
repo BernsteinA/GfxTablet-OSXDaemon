@@ -10,6 +10,8 @@ from Quartz.CoreGraphics import CGGetActiveDisplayList
 from Quartz.CoreGraphics import kCGEventMouseMoved
 from Quartz.CoreGraphics import kCGEventLeftMouseDown
 from Quartz.CoreGraphics import kCGEventLeftMouseUp
+from Quartz.CoreGraphics import kCGEventRightMouseDown
+from Quartz.CoreGraphics import kCGEventRightMouseUp
 from Quartz.CoreGraphics import kCGMouseButtonLeft
 from Quartz.CoreGraphics import kCGTabletEventPointPressure
 from Quartz.CoreGraphics import kCGMouseEventPressure
@@ -40,9 +42,9 @@ def UpdateDisplaysBounds():
         screenBounds = CGDisplayBounds(ids[0])
         return screenBounds
 
-def mouseEvent(type, posx, posy, pressure,whichbutton):
-        theEvent = CGEventCreateMouseEvent(None,type,(posx,posy),kCGMouseButtonLeft)
-        #CGEventSetType(theEvent,type)
+def mouseEvent(type, posx, posy, pressure,whichbutton,status):
+        theEvent = CGEventCreate(None)
+        CGEventSetType(theEvent,type)
         CGEventSetLocation(theEvent,(posx,posy))
 
         CGEventSetIntegerValueField(theEvent,kCGMouseEventSubtype,kCGEventMouseSubtypeTabletPoint)
@@ -61,27 +63,35 @@ def mouseEvent(type, posx, posy, pressure,whichbutton):
         CGEventSetDoubleValueField(theEvent, kCGTabletEventRotation, 0);
         CGEventSetDoubleValueField(theEvent, kCGTabletEventTangentialPressure, 0);
 
-       # CGEventSetLocation(theEvent,(posx,posy))
-        
-        #CGEventSetIntegerValueField(theEvent,kCGTabletEventPointButtons,0x00)
+        #CGEventSetLocation(theEvent,(posx,posy))
+
+        if(whichbutton==0&status==0):
+          buttonstatuses = buttonstats & 0x10
+        elif(whichbutton==0&status==1):
+          buttonstatuses = buttonstats | 0x01
+        if(whichbutton==1&status==0):
+          buttonstatuses = buttonstats & 0x01
+        elif(whichbutton==1&status==1):
+          buttonstatuses = buttonstats | 0x10
+
+        CGEventSetIntegerValueField(theEvent,kCGTabletEventPointButtons,buttonstatuses)
 
         CGEventPost(kCGHIDEventTap, theEvent)
-def mousemove(posx,posy,pressure,buttonnum):
-        if(buttonnum==0):
-                mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,buttonnum);
-        elif(buttonnum==1):
-                mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,buttonnum);
-def mouseclick(posx,posy, pressure,buttonnum,status):
-        if(buttonstatus==1):
+        return buttonstatuses
+
+def mousemove(posx,posy,pressure):
+        buttonstatuses = mouseEvent(kCGEventTabletPointer, posx,posy,pressure, buttonnum,buttonstatus);
+def mouseclick(posx,posy, pressure,whichbutton,status):
+        if(status==1):
                 if(buttonnum==0):
-                        mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,buttonnum);
+                        buttonstats = mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,whichbutton,status);
                 elif(buttonnum==1):
-                        mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,buttonnum);
-        elif(buttonstatus==0):
+                        buttonstats = mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,whichbutton,status);
+        elif(status==0):
                 if(buttonnum==0):
-                        mouseEvent(kCGEventLeftMouseUp, posx,posy,pressure,buttonnum);
+                        buttonstats = mouseEvent(kCGEventLeftMouseUp, posx,posy,pressure,whichbutton,status);
                 elif(buttonnum==1):
-                        mouseEvent(kCGEventRightMouseUp, posx,posy,pressure,buttonnum);       
+                        buttonstats = mouseEvent(kCGEventRightMouseUp, posx,posy,pressure,whichbutton,status);       
 
 rect = UpdateDisplaysBounds()
 gfxTablet= None
@@ -92,7 +102,8 @@ y= None
 pressure= None
 buttonnum= None
 buttonstatus = None
-print rect
+buttonstats = 0x00
+#print rect
 
 port = 40118        # port where we expect to get a msg
 
@@ -119,7 +130,7 @@ while True:
     # print  gfxTablet, version, messagetype, x, y, pressure
      if(messagetype==0):
       #  print "move"
-        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0,buttonnum);
+        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0);
      elif(messagetype==1):
     #    print "button"
    #     print buttonnum
