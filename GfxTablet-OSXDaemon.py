@@ -43,9 +43,9 @@ def UpdateDisplaysBounds():
         return screenBounds
 
 def mouseEvent(type, posx, posy, pressure,whichbutton,status):
-        theEvent = CGEventCreate(None)
-        CGEventSetType(theEvent,type)
-        CGEventSetLocation(theEvent,(posx,posy))
+        theEvent = CGEventCreateMouseEvent(None,type,(posx,posy),kCGMouseButtonLeft)
+        #CGEventSetType(theEvent,type)
+        #CGEventSetLocation(theEvent,(posx,posy))
 
         CGEventSetIntegerValueField(theEvent,kCGMouseEventSubtype,kCGEventMouseSubtypeTabletPoint)
 
@@ -79,19 +79,27 @@ def mouseEvent(type, posx, posy, pressure,whichbutton,status):
         CGEventPost(kCGHIDEventTap, theEvent)
         return buttonstatuses
 
-def mousemove(posx,posy,pressure):
-        buttonstatuses = mouseEvent(kCGEventTabletPointer, posx,posy,pressure, buttonnum,buttonstatus);
+def mousemove(posx,posy,pressure,status):
+        buttonstatuses = mouseEvent(kCGEventMouseMoved, posx,posy,pressure, buttonnum,status);
+        #if(buttonnum==0):
+        #    buttonstatuses = mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure, buttonnum,buttonstatus);
+        #else:
+        #    buttonstatuses = mouseEvent(kCGEventRightMouseDown, posx,posy,pressure, buttonnum,buttonstatus);
 def mouseclick(posx,posy, pressure,whichbutton,status):
         if(status==1):
                 if(buttonnum==0):
-                        buttonstats = mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,whichbutton,status);
+                        buttonstats = mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,whichbutton,status)
+                        print "pen down"
                 elif(buttonnum==1):
-                        buttonstats = mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,whichbutton,status);
+                        buttonstats = mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,whichbutton,status)
+                        print "eraser down"
         elif(status==0):
                 if(buttonnum==0):
-                        buttonstats = mouseEvent(kCGEventLeftMouseUp, posx,posy,pressure,whichbutton,status);
+                        buttonstats = mouseEvent(kCGEventLeftMouseUp, posx,posy,pressure,whichbutton,status)
+                        print "pen up"
                 elif(buttonnum==1):
-                        buttonstats = mouseEvent(kCGEventRightMouseUp, posx,posy,pressure,whichbutton,status);       
+                        buttonstats = mouseEvent(kCGEventRightMouseUp, posx,posy,pressure,whichbutton,status)
+                        print "eraser up"     
 
 rect = UpdateDisplaysBounds()
 gfxTablet= None
@@ -130,7 +138,8 @@ while True:
     # print  gfxTablet, version, messagetype, x, y, pressure
      if(messagetype==0):
       #  print "move"
-        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0);
+        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0,buttonstatus);
+        print x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0
      elif(messagetype==1):
     #    print "button"
    #     print buttonnum
@@ -144,3 +153,4 @@ while True:
    #  print pressure/19817.0
 
         mouseclick(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0,buttonnum,buttonstatus);
+        print x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0
