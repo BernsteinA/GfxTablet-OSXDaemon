@@ -8,6 +8,7 @@ from Quartz.CoreGraphics import CGRectMake
 from Quartz.CoreGraphics import CGDisplayBounds
 from Quartz.CoreGraphics import CGGetActiveDisplayList
 from Quartz.CoreGraphics import kCGEventLeftMouseDragged
+from Quartz.CoreGraphics import kCGEventRightMouseDragged
 from Quartz.CoreGraphics import kCGEventLeftMouseDown
 from Quartz.CoreGraphics import kCGEventLeftMouseUp
 from Quartz.CoreGraphics import kCGEventRightMouseDown
@@ -65,41 +66,40 @@ def mouseEvent(type, posx, posy, pressure,whichbutton,status):
 
         #CGEventSetLocation(theEvent,(posx,posy))
 
-        if(whichbutton==0&status==0):
-          buttonstatuses = buttonstats & 0x10
-        elif(whichbutton==0&status==1):
-          buttonstatuses = buttonstats | 0x01
-        if(whichbutton==1&status==0):
-          buttonstatuses = buttonstats & 0x01
-        elif(whichbutton==1&status==1):
-          buttonstatuses = buttonstats | 0x10
+        if(status==1):
+            buttonstatuses=0x1
+        else:
+            buttonstatuses=0x0
 
         CGEventSetIntegerValueField(theEvent,kCGTabletEventPointButtons,buttonstatuses)
 
         CGEventPost(kCGHIDEventTap, theEvent)
-        return buttonstatuses
 
-def mousemove(posx,posy,pressure,status):
-        buttonstatuses = mouseEvent(kCGEventLeftMouseDragged, posx,posy,pressure, buttonnum,status);
-        #if(buttonnum==0):
-        #    buttonstatuses = mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure, buttonnum,buttonstatus);
-        #else:
-        #    buttonstatuses = mouseEvent(kCGEventRightMouseDown, posx,posy,pressure, buttonnum,buttonstatus);
+
+def mousemove(posx,posy,pressure,whichbutton,status):
+    if(whichbutton==0):
+        mouseEvent(kCGEventLeftMouseDragged, posx,posy,pressure, buttonnum,status);
+    elif(whichbutton==1):
+        mouseEvent(kCGEventRightMouseDragged, posx,posy,pressure, buttonnum,status);
 def mouseclick(posx,posy, pressure,whichbutton,status):
         if(status==1):
                 if(buttonnum==0):
-                        buttonstats = mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,whichbutton,status)
+                        mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure,whichbutton,status)
                         print "pen down"
+                        
                 elif(buttonnum==1):
-                        buttonstats = mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,whichbutton,status)
+                        mouseEvent(kCGEventRightMouseDown, posx,posy,pressure,whichbutton,status)
                         print "eraser down"
+                        
         elif(status==0):
                 if(buttonnum==0):
-                        buttonstats = mouseEvent(kCGEventLeftMouseUp, posx,posy,pressure,whichbutton,status)
+                        mouseEvent(kCGEventLeftMouseUp, posx,posy,pressure,whichbutton,status)
                         print "pen up"
+                        
                 elif(buttonnum==1):
-                        buttonstats = mouseEvent(kCGEventRightMouseUp, posx,posy,pressure,whichbutton,status)
-                        print "eraser up"     
+                        mouseEvent(kCGEventRightMouseUp, posx,posy,pressure,whichbutton,status)
+                        print "eraser up"
+
 
 rect = UpdateDisplaysBounds()
 gfxTablet= None
@@ -110,7 +110,6 @@ y= None
 pressure= None
 buttonnum= None
 buttonstatus = None
-buttonstats = 0x00
 #print rect
 
 port = 40118        # port where we expect to get a msg
@@ -138,7 +137,7 @@ while True:
     # print  gfxTablet, version, messagetype, x, y, pressure
      if(messagetype==0):
       #  print "move"
-        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0,buttonstatus);
+        mousemove(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0,buttonnum,buttonstatus);
         print x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0
      elif(messagetype==1):
     #    print "button"
@@ -154,3 +153,4 @@ while True:
 
         mouseclick(x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0,buttonnum,buttonstatus);
         print x/65535.0*2.0*rect.size.width, (y/65535.0*2.0)*rect.size.height, pressure/19817.0
+        
