@@ -7,7 +7,7 @@ from Quartz.CoreGraphics import CGEventPost
 from Quartz.CoreGraphics import CGRectMake
 from Quartz.CoreGraphics import CGDisplayBounds
 from Quartz.CoreGraphics import CGGetActiveDisplayList
-from Quartz.CoreGraphics import kCGEventMouseMoved
+from Quartz.CoreGraphics import kCGEventLeftMouseDragged
 from Quartz.CoreGraphics import kCGEventLeftMouseDown
 from Quartz.CoreGraphics import kCGEventLeftMouseUp
 from Quartz.CoreGraphics import kCGEventRightMouseDown
@@ -80,7 +80,7 @@ def mouseEvent(type, posx, posy, pressure,whichbutton,status):
         return buttonstatuses
 
 def mousemove(posx,posy,pressure,status):
-        buttonstatuses = mouseEvent(kCGEventMouseMoved, posx,posy,pressure, buttonnum,status);
+        buttonstatuses = mouseEvent(kCGEventLeftMouseDragged, posx,posy,pressure, buttonnum,status);
         #if(buttonnum==0):
         #    buttonstatuses = mouseEvent(kCGEventLeftMouseDown, posx,posy,pressure, buttonnum,buttonstatus);
         #else:
